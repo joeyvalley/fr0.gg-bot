@@ -44,14 +44,14 @@ cloudinary.config(
 location_list = ["Puerto Rico", "Jamaica", "Texas", "Dominican Republic", "Ghana", "Barbados", "Cuba", "Florida", "Brazil", "Costa Rica"]
 artist_list = ["Joan Miro", "Juan Gris", "Mike Kelley", "Robert Rauschenberg", "Willem deKooning", "Cecily Brown", "Piet Mondrian", "Karel Appel", "Haim Steinbach", "Pablo Picasso", "Philip Guston", "Henry Moore", "Isamu Noguchi", "Alexander Calder", "Barbara Hepworth", "Jean Arp", "Leon Golub","Jeff Koons","Constant Nieuwenhuys", "Asger Jorn", "Jenny Saville", "Paul McCarthy" , "Paul Klee", "Mark Rothko"]
 species_list = ["Agalychnis callidryas", "Dendrobates auratus", "Dendrobates tinctorius", "Hyalinobatrachium ruedai", "Dendrobates azureus", "Breviceps macrops", "Conraua goliath", "Theloderma corticale", "Nasikabatrachus sahyadrensis", "Pipa pipa", "Rhacophorus nigropalmatus", "Ceratophrys genus"]
+qualities_list = ["cute", "simple", "angry", "devilish", "smiling", "fat"]
+firing_styles = ["raku-fired", "pit-fired", "soda-fired", "salt-fired", "oxidation fired", "reduction fired", "bisque-fired", "wood-fired" ]
 
 # Global variables
 thread_id = None
 upload_date = datetime.now().strftime("%m/%d/%Y")
-location = random.choice(location_list)
-artists = random.sample(artist_list, 2)
-species = random.choice(species_list)
-prompt = f'{species}, a cute small ceramic frog sculpture, souvenir from a trip to {location}, full-color, {artists[0]}, {artists[1]}, textured white background, highly textured Xerox scan, archival museum catalog --no text, base, plinth  --stylize 750 --v 3'
+prompt_message = None
+
 
 class ConsoleStyles:
     HEADER = '\033[95m'
@@ -68,11 +68,22 @@ def print_with_timestamp(message):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"{ConsoleStyles.OKGREEN}{ConsoleStyles.BOLD}{timestamp}{ConsoleStyles.ENDC} {message}")
 
+def prompt():
+  location = random.choice(location_list)
+  artists = random.sample(artist_list, 2)
+  species = random.choice(species_list)
+  firing_style = random.choice(firing_styles)
+  quality = random.choice(qualities_list)
+  return f'{species}, a small {quality} ceramic frog sculpture, {firing_style}, souvenir from {location}, full-color photograph, {artists[0]}, {artists[1]}, textured white background, highly textured Xerox scan, archival museum catalog --no text, base, plinth  --stylize 750 --v 3'
+
 # Create a new prompt.
 async def create_prompt():
   global thread_id
-  global prompt
   global upload_date
+  global prompt_message
+  
+  # Update date.
+  upload_date = datetime.now().strftime("%m/%d/%Y")
   
   # Get the appropriate channel.
   channel = discord.utils.get(bot.get_all_channels(), name='sandbox')
@@ -85,7 +96,7 @@ async def create_prompt():
       thread_id = thread.id
       
       # Send today's prompt to the thread.
-      prompt_message = await thread.send(prompt)
+      prompt_message = await thread.send(prompt())
       
       # Add Midjourney bot to the thread.
       user_id = 936929561302675456
@@ -123,43 +134,52 @@ async def on_ready():
     print_with_timestamp(f'Successfully logged in as {bot.user}')
     bot.loop.create_task(daily_task())
     
-# For testing purposes.
-@bot.command(name='testfunctions')
+# Test that daily tasks are working.
+@bot.command(name='test')
 async def test_functions(ctx):
     await create_prompt()
     
-@bot.command(name="newprompt")
+# Create a prompt in direct messages.    
+@bot.command(name="prompt")
 async def random_prompt(ctx):
-  print_with_timestamp("Creating new prompt.")
-  await ctx.send( f'{random.choice(species_list)}, a cute small ceramic frog sculpture, souvenir from a trip to {random.choice(location_list)}, full-color, {random.choice(artist_list)},  {random.choice(artist_list)}, textured white background, highly textured Xerox scan, archival museum catalog --no text, base, plinth  --stylize 750 --v 3')
- 
+  global prompt_message
+  await ctx.send(prompt())
+  prompt_message = await ctx.send(prompt())
+  
+# Check that today's date is correct.    
+@bot.command(name="today")
+async def random_prompt(ctx):
+  global upload_date
+  print_with_timestamp("Testing date.")
+  await ctx.send(f"Today's date is {upload_date}")
 
-        
-@bot.command(name='saveimage')
+# Save image and upload to the database.
+@bot.command(name='upload')
 async def save_image(ctx):
     global thread_id
-    global prompt
+    global prompt_message
     global upload_date
-    
-    print_with_timestamp("Command received to save image.")
-    
-    # Check if a thread has been created.
-    if thread_id is None:
-        await ctx.send("No thread created yet.")
-        return
 
-    # Check for the correct channel.
-    channel = bot.get_channel(thread_id)
-    if channel is None:
-        await ctx.send("Thread channel not found.")
-        return
-      
+    print_with_timestamp("Command received to save image.")
+
+    # If thread_id is None, use the channel where the command was issued.
+    if thread_id is None:
+        print_with_timestamp("No specific thread set. Using the current channel.")
+        channel = ctx.channel
+    else:
+        # Check for the correct channel.
+        channel = bot.get_channel(thread_id)
+        if channel is None:
+            print_with_timestamp("Error: Thread channel not found.")
+            await ctx.send("Thread channel not found.")
+            return
+
     # Find upscaled image.
+    found_image = False
     async for message in channel.history(limit=100, oldest_first=False):
-        
         # Midjourney bot ID from this server.
         midjourney_bot_id = 936929561302675456
-        
+
         if message.author.id == midjourney_bot_id and message.attachments:
             image_url = message.attachments[0].url
             found_image = True
@@ -176,7 +196,7 @@ async def save_image(ctx):
                     cloudinary_result = cloudinary.uploader.upload(image_data)
 
                     # Insert data into Firebase.
-                    firebase_result = insert_data_to_firebase(upload_date, prompt, cloudinary_result["url"])
+                    firebase_result = insert_data_to_firebase(upload_date, prompt_message, cloudinary_result["url"])
                     
                     await ctx.send(f"Successfully uploaded today's fr0gg.")
                     await ctx.send("See you tomorrow! 🐸")
@@ -185,11 +205,7 @@ async def save_image(ctx):
                     
     if not found_image:
         await ctx.send("No image saved, please try again.")
-        
-@bot.command(name='upload')
-async def save_image(ctx):
-    await ctx.send("Stand by...")
-  
+          
 @bot.event
 # Prevent fr0.gg from talking to itself in a feedback loop.
 async def on_message(message):
