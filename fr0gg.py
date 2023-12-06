@@ -52,6 +52,9 @@ thread_id = None
 upload_date = datetime.now().strftime("%m/%d/%Y")
 prompt_message = None
 
+# Log file.
+with open('logs/logfile.txt', 'a') as f:
+   f.write(f'Script started at {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}.\n')
 
 class ConsoleStyles:
     HEADER = '\033[95m'
