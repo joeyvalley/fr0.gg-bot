@@ -1,4 +1,4 @@
-#fr0gg.py
+#!/usr/bin/env python3
 import discord
 from discord.ext import commands
 
@@ -52,8 +52,10 @@ thread_id = None
 upload_date = datetime.now().strftime("%m/%d/%Y")
 prompt_message = None
 
-# Log file.
-with open('logs/logfile.txt', 'a') as f:
+# Add to log file.
+dir_path = os.path.dirname(os.path.realpath(__file__))
+log_path = os.path.join(dir_path, 'logs', 'logfile.txt')
+with open(log_path, 'a') as f:
    f.write(f'Script started at {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}.\n')
 
 class ConsoleStyles:

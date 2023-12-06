@@ -2,7 +2,12 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
-cred = credentials.Certificate('serviceAccountKey.json')
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+service_account_path = os.path.join(dir_path, 'serviceAccountKey.json')
+cred = credentials.Certificate(service_account_path)
+
 
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://fr0gg-1445c-default-rtdb.firebaseio.com/'
