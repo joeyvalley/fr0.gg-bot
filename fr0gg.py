@@ -105,7 +105,7 @@ firing_styles = [
 
 # Global variables
 thread_id = None
-upload_date = datetime.now().strftime("%m/%d/%Y")
+upload_date = datetime.now().strftime("%Y-%m-%d")
 prompt_message = ""
 
 # Add to log file.
@@ -159,7 +159,7 @@ async def create_prompt():
     global prompt_message
 
     # Update date.
-    upload_date = datetime.now().strftime("%m/%d/%Y")
+    upload_date = datetime.now().strftime("%Y-%m-%d")
 
     # Get the appropriate channel.
     channel = discord.utils.get(bot.get_all_channels(), name="sandbox")
