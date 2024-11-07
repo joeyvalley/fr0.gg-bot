@@ -76,6 +76,35 @@ artist_list = [
     "Paul McCarthy",
     "Paul Klee",
     "Mark Rothko",
+    "Wassily Kandinsky",
+    "Franz Kline",
+    "Jackson Pollock",
+    "Barnett Newman",
+    "Lee Krasner",
+    "Helen Frankenthaler",
+    "Cy Twombly",
+    "David Smith",
+    "Richard Serra",
+    "Robert Smithson",
+    "Donald Judd",
+    "Sol LeWitt",
+    "Dan Flavin",
+    "Carl Andre",
+    "Robert Morris",
+    "Bridget Riley",
+    "Kenneth Noland",
+    "Frank Stella",
+    "Ellsworth Kelly",
+    "Agnes Martin",
+    "Lucio Fontana",
+    "Yves Klein",
+    "Louise Bourgeois",
+    "Eva Hesse",
+    "Lynda Benglis",
+    "Richard Tuttle",
+    "Robert Mangold",
+    "Robert Ryman",
+    "Takashi Murata",
 ]
 species_list = [
     "Agalychnis callidryas",
@@ -105,7 +134,7 @@ firing_styles = [
 
 # Global variables
 thread_id = None
-upload_date = datetime.now().strftime("%Y-%m-%d")
+upload_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 prompt_message = ""
 
 # Add to log file.
@@ -159,7 +188,7 @@ async def create_prompt():
     global prompt_message
 
     # Update date.
-    upload_date = datetime.now().strftime("%Y-%m-%d")
+    upload_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
     # Get the appropriate channel.
     channel = discord.utils.get(bot.get_all_channels(), name="sandbox")
