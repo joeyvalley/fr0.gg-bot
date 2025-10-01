@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 
 import random, re
-from datetime import datetime
+from datetime import datetime, timezone
 
 import aiohttp
 import cloudinary
@@ -26,11 +26,9 @@ cloudinary_api_secret = os.environ.get("CLOUDINARY_API_SECRET")
 
 # Setup intents for Discord bot
 intents = discord.Intents.default()
-intents.messages = True
-intents.guild_messages = True
-intents.presences = True
-intents.members = True
 intents.message_content = True
+intents.guilds = True
+intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Configure Cloudinary for image uploading.
@@ -248,18 +246,16 @@ async def on_ready():
 
 
 # Test that daily tasks are working.
-@bot.command(name="test")
-async def test_functions(ctx):
-    print_with_timestamp("Command received to test functions.")
-    await create_prompt()
+@bot.command()
+async def test(ctx):
+    await ctx.send("I'm alive 🐸")
 
 
 # Check that today's date is correct.
-@bot.command(name="today")
-async def test_date(ctx):
-    global upload_date
-    print_with_timestamp("Command received to test date.")
-    await ctx.send(f"Today's date is {upload_date}")
+@bot.command()
+async def time(ctx):
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    await ctx.send(f"Current time: {now}")
 
 
 # Check that today's date is correct.
@@ -267,11 +263,10 @@ async def test_date(ctx):
 async def test_time(ctx):
     now = datetime.now()
     print_with_timestamp("Command received to test time.")
-    print_with_timestamp(f"It is {now.hour}:{now.minute}")
     await ctx.send(f"It is {now.hour}:{now.minute}")
 
 
-#
+# Test email
 @bot.command(name="email")
 async def test_email(ctx):
     print_with_timestamp("Command received to test email function.")
@@ -361,11 +356,6 @@ async def on_message(message):
         return
     # Allow fr0.gg to process custom commands.
     await bot.process_commands(message)
-
-    # Be cute with it.
-    if isinstance(message.channel, discord.DMChannel):
-        # Respond to the DM
-        await message.channel.send("ribbit 🐸")
 
 
 bot.run(bot_token)
